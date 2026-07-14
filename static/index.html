@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Listings Aggregator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F4EF;
+    --panel:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5B6472;
+    --line:#DAD6CB;
+    --navy:#1F3A5F;
+    --amber:#D98A2B;
+    --amber-soft:#F4E3C8;
+    --good:#3F7A5C;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  header.top{
+    border-bottom:2px solid var(--ink);
+    padding:22px 32px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin:0 0 6px;
+  }
+  .brand-title{
+    margin:0;
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .ticker{
+    display:flex;
+    gap:26px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .ticker-item{text-align:right;}
+  .ticker-item .val{font-size:22px;font-weight:600;color:var(--navy);line-height:1;}
+  .ticker-item .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:4px;}
+
+  main{padding:26px 32px 60px;max-width:1320px;margin:0 auto;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+
+  .filters{
+    padding:18px 20px;
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .filters .full{grid-column:1 / -1;}
+  .field label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input[type=text], .field input[type=number], .field select{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--navy);
+    outline-offset:1px;
+  }
+  .checkbox-row{display:flex;align-items:center;gap:8px;padding-top:22px;}
+  .checkbox-row input{width:16px;height:16px;}
+  .checkbox-row label{font-size:12px;color:var(--ink);}
+
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:9px 16px;
+    border-radius:var(--radius);
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+  }
+  .btn:hover{background:#000;}
+  .btn.ghost{background:transparent;color:var(--ink);}
+  .btn.ghost:hover{background:var(--line);}
+  .filters-actions{display:flex;gap:10px;align-items:flex-end;grid-column:span 2;}
+
+  .quick-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    border-radius:100px;
+    background:var(--panel);
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .chip:hover{border-color:var(--navy);color:var(--navy);}
+  .chip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+
+  .status-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:10px 14px;
+    border-bottom:1px solid var(--ink);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:13px 14px;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+    vertical-align:top;
+  }
+  tbody tr:hover{background:#FBFAF6;}
+  .job-title{font-weight:600;}
+  .job-company{color:var(--ink-soft);font-size:12px;margin-top:2px;}
+  .badge-remote{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    padding:2px 7px;
+    border-radius:100px;
+    background:var(--amber-soft);
+    color:#7A4E10;
+    margin-left:6px;
+  }
+  .skills{display:flex;flex-wrap:wrap;gap:5px;max-width:260px;}
+  .skill-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    padding:2px 7px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--ink-soft);
+  }
+  .apply-link{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--navy);
+    text-decoration:none;
+    border-bottom:1px solid var(--navy);
+    white-space:nowrap;
+  }
+  .apply-link:hover{color:#000;border-color:#000;}
+  .source-tag{font-family:'IBM Plex Mono', monospace;font-size:11px;color:var(--ink-soft);}
+
+  .empty-state{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+  }
+  .empty-state .big{font-size:15px;color:var(--ink);margin-bottom:6px;font-weight:600;}
+
+  .pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:14px;
+    padding:20px 0 4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+  }
+  .pagination button{
+    background:none;border:1px solid var(--line);border-radius:var(--radius);
+    padding:6px 12px;cursor:pointer;font-family:inherit;
+  }
+  .pagination button:disabled{opacity:.35;cursor:not-allowed;}
+  .pagination button:not(:disabled):hover{border-color:var(--navy);color:var(--navy);}
+
+  footer{
+    text-align:center;
+    padding:24px;
+    font-size:11px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width:900px){
+    .filters{grid-template-columns:repeat(2,1fr);}
+    .filters-actions{grid-column:span 2;}
+    .ticker{gap:16px;}
+    table, thead, tbody, tr, th, td{display:block;}
+    thead{display:none;}
+    tbody tr{border-bottom:2px solid var(--ink);padding:10px 0;}
+    tbody td{border-bottom:none;padding:4px 14px;}
+    tbody td:before{
+      content:attr(data-label);
+      display:block;
+      font-size:9px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--ink-soft);
+      margin-bottom:2px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <p class="brand-eyebrow">Multi-source · Refreshed hourly</p>
+    <h1 class="brand-title">Job Listings Aggregator</h1>
+  </div>
+  <div class="ticker" id="ticker">
+    <div class="ticker-item"><div class="val" id="stat-total">–</div><div class="lbl">Total jobs</div></div>
+    <div class="ticker-item"><div class="val" id="stat-remote">–</div><div class="lbl">Remote</div></div>
+    <div class="ticker-item"><div class="val" id="stat-sources">–</div><div class="lbl">Sources</div></div>
+  </div>
+</header>
+
+<main>
+
+  <div class="panel filters" id="filters">
+    <div class="field">
+      <label for="f-search">Search</label>
+      <input type="text" id="f-search" placeholder="title, company, skill…">
+    </div>
+    <div class="field">
+      <label for="f-skill">Skill</label>
+      <input type="text" id="f-skill" placeholder="e.g. Python">
+    </div>
+    <div class="field">
+      <label for="f-location">Location</label>
+      <input type="text" id="f-location" placeholder="e.g. Mohali">
+    </div>
+    <div class="field">
+      <label for="f-experience">Min. experience (yrs)</label>
+      <input type="number" id="f-experience" min="0" placeholder="e.g. 4">
+    </div>
+    <div class="field">
+      <label for="f-source">Source</label>
+      <select id="f-source">
+        <option value="">All sources</option>
+      </select>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="f-remote">
+      <label for="f-remote">Remote only</label>
+    </div>
+
+    <div class="filters-actions full" style="grid-column:span 2;justify-self:end;">
+      <button class="btn ghost" id="btn-reset" type="button">Reset</button>
+      <button class="btn" id="btn-apply" type="button">Apply filters</button>
+    </div>
+  </div>
+
+  <div class="quick-chips" id="quick-chips">
+    <span class="chip" data-preset="python">Python jobs</span>
+    <span class="chip" data-preset="remote">Remote jobs</span>
+    <span class="chip" data-preset="senior">4+ years</span>
+    <span class="chip" data-preset="mohali">Mohali</span>
+    <span class="chip" data-preset="bangalore">Bangalore</span>
+  </div>
+
+  <div class="status-row">
+    <span id="result-count">Loading…</span>
+    <span id="last-updated"></span>
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:26%">Role</th>
+          <th style="width:14%">Location</th>
+          <th style="width:12%">Experience</th>
+          <th style="width:12%">Salary</th>
+          <th style="width:22%">Skills</th>
+          <th style="width:8%">Source</th>
+          <th style="width:6%">Apply</th>
+        </tr>
+      </thead>
+      <tbody id="job-rows"></tbody>
+    </table>
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="big">No jobs match these filters</div>
+      <div>Try widening your search, or wait for the next hourly scrape.</div>
+    </div>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+
+</main>
+
+<footer>Job Listings Aggregator · Selenium + BeautifulSoup + FastAPI + SQLAlchemy + pandas</footer>
+
+<script>
+const API_BASE = '';
+let state = { page: 1, page_size: 20 };
+
+function qs(params){
+  const p = new URLSearchParams();
+  Object.entries(params).forEach(([k,v]) => {
+    if (v !== '' && v !== null && v !== undefined && v !== false) p.set(k, v);
+  });
+  return p.toString();
+}
+
+async function loadStats(){
+  try{
+    const res = await fetch(`${API_BASE}/stats`);
+    if(!res.ok) throw new Error('stats fetch failed');
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.total_jobs;
+    document.getElementById('stat-remote').textContent = data.remote_jobs;
+    document.getElementById('stat-sources').textContent = Object.keys(data.by_source).length;
+
+    const sourceSelect = document.getElementById('f-source');
+    const current = sourceSelect.value;
+    sourceSelect.innerHTML = '<option value="">All sources</option>' +
+      Object.keys(data.by_source).map(s => `<option value="${s}">${s} (${data.by_source[s]})</option>`).join('');
+    sourceSelect.value = current;
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderRows(jobs){
+  const tbody = document.getElementById('job-rows');
+  const emptyState = document.getElementById('empty-state');
+  if(jobs.length === 0){
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  tbody.innerHTML = jobs.map(job => {
+    const skills = (job.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+    return `
+      <tr>
+        <td data-label="Role">
+          <div class="job-title">${escapeHtml(job.title)}${job.is_remote ? '<span class="badge-remote">REMOTE</span>' : ''}</div>
+          <div class="job-company">${escapeHtml(job.company)}</div>
+        </td>
+        <td data-label="Location">${escapeHtml(job.location) || '—'}</td>
+        <td data-label="Experience">${escapeHtml(job.experience) || '—'}</td>
+        <td data-label="Salary">${escapeHtml(job.salary) || '—'}</td>
+        <td data-label="Skills"><div class="skills">${skills.slice(0,6).map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join('')}</div></td>
+        <td data-label="Source"><span class="source-tag">${escapeHtml(job.source)}</span></td>
+        <td data-label="Apply"><a class="apply-link" href="${job.apply_url}" target="_blank" rel="noopener noreferrer">View →</a></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPagination(total, page, pageSize){
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const el = document.getElementById('pagination');
+  el.innerHTML = `
+    <button id="pg-prev" ${page <= 1 ? 'disabled' : ''}>← Prev</button>
+    <span>Page ${page} of ${totalPages}</span>
+    <button id="pg-next" ${page >= totalPages ? 'disabled' : ''}>Next →</button>
+  `;
+  document.getElementById('pg-prev').onclick = () => { state.page = Math.max(1, page - 1); loadJobs(); };
+  document.getElementById('pg-next').onclick = () => { state.page = Math.min(totalPages, page + 1); loadJobs(); };
+}
+
+async function loadJobs(){
+  document.getElementById('result-count').textContent = 'Loading…';
+  const params = {
+    search: document.getElementById('f-search').value,
+    skill: document.getElementById('f-skill').value,
+    location: document.getElementById('f-location').value,
+    min_experience: document.getElementById('f-experience').value,
+    source: document.getElementById('f-source').value,
+    remote: document.getElementById('f-remote').checked,
+    page: state.page,
+    page_size: state.page_size,
+  };
+  try{
+    const res = await fetch(`${API_BASE}/jobs?${qs(params)}`);
+    if(!res.ok) throw new Error('jobs fetch failed: ' + res.status);
+    const data = await res.json();
+    renderRows(data.results);
+    renderPagination(data.total, data.page, data.page_size);
+    document.getElementById('result-count').textContent = `${data.total} job(s) found`;
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  }catch(e){
+    console.error(e);
+    document.getElementById('result-count').textContent = 'Could not load jobs — is the API running?';
+  }
+}
+
+document.getElementById('btn-apply').addEventListener('click', () => {
+  state.page = 1;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  loadJobs();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('f-search').value = '';
+  document.getElementById('f-skill').value = '';
+  document.getElementById('f-location').value = '';
+  document.getElementById('f-experience').value = '';
+  document.getElementById('f-source').value = '';
+  document.getElementById('f-remote').checked = false;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  state.page = 1;
+  loadJobs();
+});
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const preset = chip.dataset.preset;
+    document.getElementById('f-search').value = '';
+    document.getElementById('f-skill').value = '';
+    document.getElementById('f-location').value = '';
+    document.getElementById('f-experience').value = '';
+    document.getElementById('f-remote').checked = false;
+
+    if(preset === 'python') document.getElementById('f-skill').value = 'Python';
+    if(preset === 'remote') document.getElementById('f-remote').checked = true;
+    if(preset === 'senior') document.getElementById('f-experience').value = 4;
+    if(preset === 'mohali') document.getElementById('f-location').value = 'Mohali';
+    if(preset === 'bangalore') document.getElementById('f-location').value = 'Bangalore';
+
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.page = 1;
+    loadJobs();
+  });
+});
+
+document.getElementById('f-search').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ state.page = 1; loadJobs(); }
+});
+
+loadStats();
+loadJobs();
+setInterval(loadStats, 60000);
+</script>
+
+</body>
+</html>

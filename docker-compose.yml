@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  # --- Option A (default): SQLite, zero extra setup ---
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////app/data/jobs.db
+      ENABLE_SCHEDULER: "true"
+      SCRAPE_INTERVAL_HOURS: "1"
+      ENABLE_EMAIL_NOTIFICATIONS: "false"
+    volumes:
+      - jobs_sqlite_data:/app/data
+    restart: unless-stopped
+
+  # --- Option B: PostgreSQL-backed setup ---
+  # Uncomment this service and the `db` service below, and point `api`'s
+  # DATABASE_URL at it, to run against Postgres instead of SQLite.
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_DB: jobsdb
+  #     POSTGRES_USER: jobs_user
+  #     POSTGRES_PASSWORD: jobs_password
+  #   volumes:
+  #     - jobs_postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+volumes:
+  jobs_sqlite_data:
+  # jobs_postgres_data:

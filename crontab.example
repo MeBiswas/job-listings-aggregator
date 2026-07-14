@@ -1,0 +1,10 @@
+# Example crontab entry for running the scraper every hour (bonus feature).
+#
+# Install with:  crontab -e   then paste a line like the one below,
+# adjusting the path to where you cloned this project.
+#
+# IMPORTANT: if you use cron for scheduling, set ENABLE_SCHEDULER=false in
+# .env so the FastAPI app's built-in APScheduler job doesn't ALSO scrape
+# every hour (you'd otherwise end up scraping twice as often as intended).
+
+0 * * * * cd /path/to/job-listings-aggregator && ./venv/bin/python scripts/run_scrapers.py >> logs/scrape.log 2>&1
